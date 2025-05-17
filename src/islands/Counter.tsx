@@ -4,7 +4,7 @@ import { createIsland } from '@/lib/island'
 import { Button } from '@/components/ui/button'
 
 export function Counter() {
-  const [ count, setCount ] = useState(100)
+  const [ count, setCount ] = useState(0)
 
   return (
     <>

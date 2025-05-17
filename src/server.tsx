@@ -20,4 +20,20 @@ app.get('/', (c) => {
   )
 })
 
+app.get('/counter', (c) => {
+  return c.render(
+    <>
+      <$Counter />
+    </>
+  )
+})
+
+app.get('/hello', (c) => {
+  return c.render(
+    <>
+      <$Hello message="日本" />
+    </>
+  )
+})
+
 export default app
