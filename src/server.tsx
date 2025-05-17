@@ -1,9 +1,10 @@
 import { Hono } from 'hono'
 import { renderer } from './renderer'
 
-import $Counter from '@/islands/Counter'
-import $Hello from '@/islands/Hello'
-import $MyForm from '@/islands/MyForm'
+import $Counter from '@/islands/counter'
+import $Hello from '@/islands/hello'
+import $MyForm from '@/islands/my-form'
+import $MyLoginForm from '@/islands/my-login-form'
 
 const app = new Hono()
 
@@ -43,6 +44,16 @@ app.get('/myform', (c) => {
         <$MyForm />
       </div>
     </>
+  )
+})
+
+app.get('/login', (c) => {
+  return c.render(
+    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+      <div className="w-full max-w-sm">
+      <$MyLoginForm />
+      </div>
+    </div>
   )
 })
 
