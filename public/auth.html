@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ログイン / 登録 | マジックリンク認証</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="language-selector">
+      <button type="button" class="active" data-lang="ja">日本語</button>
+      <button type="button" data-lang="en">English</button>
+    </div>
+    
+    <div class="auth-header">
+      <h1 id="auth-title">ログイン / 登録</h1>
+      <p id="auth-subtitle">メールアドレスを入力して続行してください</p>
+    </div>
+    
+    <form id="auth-form" class="auth-form">
+      <div class="form-group">
+        <label for="email" id="email-label">メールアドレス</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          required 
+          autocomplete="email"
+          placeholder="example@example.com">
+        <div id="email-error" class="error-message hidden"></div>
+      </div>
+      
+      <button type="submit" class="btn" id="submit-btn">続行</button>
+    </form>
+    
+    <div id="success-message" class="success-message hidden"></div>
+
+    <div id="verification-form" class="auth-form hidden">
+      <div class="form-group">
+        <label for="verification-code" id="code-label">認証コード</label>
+        <input 
+          type="text" 
+          id="verification-code" 
+          name="verificationCode" 
+          placeholder="6桁のコードを入力"
+          maxlength="6"
+          pattern="[0-9]{6}"
+          inputmode="numeric">
+        <div id="code-error" class="error-message hidden"></div>
+      </div>
+      
+      <button type="button" class="btn" id="verify-btn">認証する</button>
+      <p id="verification-note" class="auth-footer">メールに記載された6桁のコードを入力してください</p>
+    </div>
+    
+    <div class="auth-footer">
+      <p id="support-text">問題がありましたか？<a href="mailto:support@example.com" id="support-link">サポートにお問い合わせください</a></p>
+    </div>
+  </div>
+
+  <script>
+    // 言語の切り替え機能
+    const translations = {
+      ja: {
+        title: 'ログイン / 登録',
+        subtitle: 'メールアドレスを入力して続行してください',
+        emailLabel: 'メールアドレス',
+        emailPlaceholder: 'example@example.com',
+        submitButton: '続行',
+        codeLabel: '認証コード',
+        codePlaceholder: '6桁のコードを入力',
+        verifyButton: '認証する',
+        verificationNote: 'メールに記載された6桁のコードを入力してください',
+        supportText: '問題がありましたか？',
+        supportLink: 'サポートにお問い合わせください',
+        emailSent: 'メールを送信しました。メールボックスをご確認ください。',
+        emailError: 'メールアドレスが無効です。正しいメールアドレスを入力してください。',
+        networkError: 'ネットワークエラーが発生しました。もう一度お試しください。',
+        codeError: '認証コードが無効です。正しいコードを入力してください。'
+      },
+      en: {
+        title: 'Sign In / Sign Up',
+        subtitle: 'Enter your email address to continue',
+        emailLabel: 'Email Address',
+        emailPlaceholder: 'example@example.com',
+        submitButton: 'Continue',
+        codeLabel: 'Verification Code',
+        codePlaceholder: 'Enter 6-digit code',
+        verifyButton: 'Verify',
+        verificationNote: 'Enter the 6-digit code sent to your email',
+        supportText: 'Having trouble?',
+        supportLink: 'Contact support',
+        emailSent: 'Email sent. Please check your inbox.',
+        emailError: 'Invalid email address. Please enter a valid email.',
+        networkError: 'A network error occurred. Please try again.',
+        codeError: 'Invalid verification code. Please enter the correct code.'
+      }
+    };
+
+    // 言語切り替えボタンのイベントリスナー
+    document.querySelectorAll('.language-selector button').forEach(button => {
+      button.addEventListener('click', () => {
+        const lang = button.getAttribute('data-lang');
+        setLanguage(lang);
+        
+        // アクティブなボタンを更新
+        document.querySelectorAll('.language-selector button').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        button.classList.add('active');
+      });
+    });
+
+    // 言語設定を適用する関数
+    function setLanguage(lang) {
+      const t = translations[lang];
+      
+      // タイトルと説明を更新
+      document.getElementById('auth-title').textContent = t.title;
+      document.getElementById('auth-subtitle').textContent = t.subtitle;
+      
+      // フォーム要素を更新
+      document.getElementById('email-label').textContent = t.emailLabel;
+      document.getElementById('email').placeholder = t.emailPlaceholder;
+      document.getElementById('submit-btn').textContent = t.submitButton;
+      
+      // 認証コードフォームを更新
+      document.getElementById('code-label').textContent = t.codeLabel;
+      document.getElementById('verification-code').placeholder = t.codePlaceholder;
+      document.getElementById('verify-btn').textContent = t.verifyButton;
+      document.getElementById('verification-note').textContent = t.verificationNote;
+      
+      // フッターを更新
+      document.getElementById('support-text').innerHTML = `${t.supportText} <a href="mailto:support@example.com" id="support-link">${t.supportLink}</a>`;
+    }
+
+    // フォーム送信処理
+    const authForm = document.getElementById('auth-form');
+    const emailInput = document.getElementById('email');
+    const emailError = document.getElementById('email-error');
+    const successMessage = document.getElementById('success-message');
+    const verificationForm = document.getElementById('verification-form');
+    const verificationCode = document.getElementById('verification-code');
+    const codeError = document.getElementById('code-error');
+    
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // フォームデータの取得
+      const email = emailInput.value.trim();
+      
+      // 簡易的なメールアドレス検証
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        const lang = document.querySelector('.language-selector button.active').getAttribute('data-lang');
+        emailError.textContent = translations[lang].emailError;
+        emailError.classList.remove('hidden');
+        return;
+      }
+      
+      // ローディング状態を表示
+      const submitBtn = document.getElementById('submit-btn');
+      const originalBtnText = submitBtn.textContent;
+      submitBtn.textContent = '';
+      submitBtn.classList.add('loading');
+      emailError.classList.add('hidden');
+      
+      try {
+        // 実際のAPI実装時には下記のようにAPIを呼び出します
+        // const response = await fetch('/api/auth/magic-link', {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //   },
+        //   body: JSON.stringify({ email }),
+        // });
+        
+        // デモ用に成功を模擬
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // API実装時には下記のようにレスポンスを処理します
+        // if (!response.ok) {
+        //   throw new Error('API request failed');
+        // }
+        // const data = await response.json();
+        
+        // 成功メッセージを表示
+        const lang = document.querySelector('.language-selector button.active').getAttribute('data-lang');
+        successMessage.textContent = translations[lang].emailSent;
+        successMessage.classList.remove('hidden');
+        
+        // メインフォームを非表示にして認証コードフォームを表示
+        authForm.classList.add('hidden');
+        verificationForm.classList.remove('hidden');
+      } catch (error) {
+        // エラー処理
+        console.error('Error:', error);
+        const lang = document.querySelector('.language-selector button.active').getAttribute('data-lang');
+        emailError.textContent = translations[lang].networkError;
+        emailError.classList.remove('hidden');
+      } finally {
+        // ローディング状態を解除
+        submitBtn.textContent = originalBtnText;
+        submitBtn.classList.remove('loading');
+      }
+    });
+    
+    // 認証コード検証処理
+    document.getElementById('verify-btn').addEventListener('click', async () => {
+      const code = verificationCode.value.trim();
+      
+      // コード検証
+      if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
+        const lang = document.querySelector('.language-selector button.active').getAttribute('data-lang');
+        codeError.textContent = translations[lang].codeError;
+        codeError.classList.remove('hidden');
+        return;
+      }
+      
+      // ローディング状態を表示
+      const verifyBtn = document.getElementById('verify-btn');
+      const originalBtnText = verifyBtn.textContent;
+      verifyBtn.textContent = '';
+      verifyBtn.classList.add('loading');
+      codeError.classList.add('hidden');
+      
+      try {
+        // 実際のAPI実装時には下記のようにAPIを呼び出します
+        // const email = emailInput.value.trim();
+        // const response = await fetch('/api/auth/verify', {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //   },
+        //   body: JSON.stringify({ email, code }),
+        // });
+        
+        // デモ用に成功を模擬
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // API実装時には下記のようにレスポンスを処理します
+        // if (!response.ok) {
+        //   throw new Error('Verification failed');
+        // }
+        // const data = await response.json();
+        
+        // ログイン成功後のリダイレクト
+        // window.location.href = '/dashboard';
+        
+        // デモ用に成功メッセージを表示
+        verificationForm.innerHTML = '<div class="success-message">認証に成功しました！リダイレクトします...</div>';
+        
+        // 実際のアプリではリダイレクトしますが、デモ用に3秒後にページをリロード
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
+      } catch (error) {
+        // エラー処理
+        console.error('Error:', error);
+        const lang = document.querySelector('.language-selector button.active').getAttribute('data-lang');
+        codeError.textContent = translations[lang].codeError;
+        codeError.classList.remove('hidden');
+      } finally {
+        // ローディング状態を解除
+        verifyBtn.textContent = originalBtnText;
+        verifyBtn.classList.remove('loading');
+      }
+    });
+  </script>
+</body>
+</html>
