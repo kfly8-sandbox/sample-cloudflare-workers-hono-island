@@ -14,12 +14,13 @@ type GlobModules = {
   [path: string]: () => Promise<ComponentModule>;
 }
 
-const componentModules = import.meta.glob<ComponentModule>('./islands/*.tsx', { eager: false }) as GlobModules
+const ISLAND_DIRECTORY = './islands'
+const COMPONENT_MODULES = import.meta.glob<ComponentModule>('./islands/*.tsx', { eager: false }) as GlobModules
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function hydrateAllIslands() {
   const islands = document.querySelectorAll('[data-app-hydrated]')
   console.log('Found islands:', islands.length)
-  console.log('Available component modules:', Object.keys(componentModules))
+  console.log('Available component modules:', Object.keys(COMPONENT_MODULES))
 
   const islandsToHydrate = Array.from(islands).filter(island =>
     island.getAttribute('data-app-hydrated') === 'false' &&
@@ -35,47 +36,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   );
 
   console.log(`Hydrated ${islandsToHydrate.length} islands`);
-})
+}
 
-// 特定のアイランドをハイドレーションする関数
 async function hydrateIsland(element: Element, componentName: string) {
   try {
     console.log(`Attempting to hydrate ${componentName} island`)
 
-    // コンポーネント名からパスを推測（大文字で始まる可能性があるため）
-    const possiblePaths = [
-      `./islands/${componentName}.tsx`,
-      `./islands/${componentName.charAt(0).toUpperCase() + componentName.slice(1)}.tsx`
-    ]
+    const modulePath = `${ISLAND_DIRECTORY}/${componentName}.tsx`
+    const importedModule = await COMPONENT_MODULES[modulePath]() as ComponentModule
 
-    // いずれかのパスが存在するか確認
-    const modulePath = possiblePaths.find(path => path in componentModules)
-
-    if (!modulePath) {
-      console.warn(`No component file found for: ${componentName}`)
-      console.log('Available modules:', Object.keys(componentModules))
-      return
-    }
-
-    const importedModule = await componentModules[modulePath]() as ComponentModule
-
-    // 使用できるすべてのエクスポートを確認
-    console.log(`Available exports for ${componentName}:`, Object.keys(importedModule))
-
-    // コンポーネントを探す（優先順位: componentName, default）
-    let Component = importedModule[componentName]
-
-    if (!Component) {
-      console.warn(`No named export ${componentName} found, falling back to default export`)
-      Component = importedModule.default
-    }
+    const Component = importedModule[componentName] ?? importedModule.default
 
     if (!Component) {
       console.error(`No suitable component export found for ${componentName}`)
       return
     }
 
-    // data-app-props属性からpropsを取得（必要な場合）
     let props = {}
     if (element.hasAttribute('data-app-props')) {
       try {
@@ -91,3 +67,5 @@ async function hydrateIsland(element: Element, componentName: string) {
     console.error(`Failed to hydrate ${componentName} island:`, error)
   }
 }
+
+document.addEventListener('DOMContentLoaded', hydrateAllIslands)
