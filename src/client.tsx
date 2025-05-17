@@ -68,4 +68,8 @@ async function hydrateIsland(element: Element, componentName: string) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', hydrateAllIslands)
+document.addEventListener('DOMContentLoaded', () => {
+  hydrateAllIslands().catch(err => {
+    console.error('Failed to hydrate islands:', err)
+  })
+})

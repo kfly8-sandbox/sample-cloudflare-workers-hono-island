@@ -1,21 +1,27 @@
-```txt
-npm install
-npm run dev
-```
+## What is this?
+
+This project is a sample application to try these stack:
+
+- [Hono](https://hono.dev)
+- [React](https://react.dev/)
+- [Tailwindcss](https://tailwindcss.com/)
+- [shadcn/ui](https://www.shadcn.net/)
+- [Cloudflare wrangler](https://developers.cloudflare.com/workers/wrangler/)
+  - To dev server, deploy Cloudflare Workers
+- [Vite](https://vite.dev/)
+  - To build client codes.
+
+This project is characterized by implementing the islands architecture.
+
+## Setup
 
 ```txt
-npm run deploy
-```
+# Install deps
+bun install
 
-[For generating/synchronizing types based on your Worker configuration run](https://developers.cloudflare.com/workers/wrangler/commands/#types):
+# Run dev server and watch codes
+bun run dev
 
-```txt
-npm run cf-typegen
-```
-
-Pass the `CloudflareBindings` as generics when instantiation `Hono`:
-
-```ts
-// src/index.ts
-const app = new Hono<{ Bindings: CloudflareBindings }>()
+# Deploy
+bun run deploy
 ```
