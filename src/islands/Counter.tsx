@@ -1,17 +1,9 @@
 import { useState } from 'react';
+import { createIsland } from '@/lib/island'
 
 import { Button } from '@/components/ui/button'
 
-export default function $Counter() {
-
-  return (
-    <div data-island="Counter">
-      <Counter />
-    </div>
-  )
-}
-
-function Counter() {
+export function Counter() {
   const [ count, setCount ] = useState(0)
 
   return (
@@ -25,3 +17,4 @@ function Counter() {
   )
 }
 
+export default createIsland(Counter)
