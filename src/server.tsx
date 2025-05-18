@@ -1,10 +1,10 @@
 import { Hono } from 'hono'
 import { renderer } from './renderer'
 
-import $Counter from '@/islands/counter'
-import $Hello from '@/islands/hello'
-import $MyForm from '@/islands/my-form'
-import $MyLoginForm from '@/islands/my-login-form'
+import $Counter from '@/islands/Counter'
+import $Hello from '@/islands/Hello'
+import $MyForm from '@/islands/MyForm'
+import $MyLoginForm from '@/islands/MyLoginForm'
 
 const app = new Hono()
 
@@ -21,9 +21,11 @@ app.get('/', (c) => {
 })
 
 app.get('/counter', (c) => {
+  // Check performance of rendering 1000 components
   return c.render(
     <>
       <$Counter />
+      {Array.from({ length: 1000 }, (_, i) => < $Counter initialCount={i} key={i} />)}
     </>
   )
 })
