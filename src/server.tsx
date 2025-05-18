@@ -22,10 +22,11 @@ app.get('/', (c) => {
 
 app.get('/counter', (c) => {
   // Check performance of rendering 1000 components
+  const max = c.req.query('max') ? parseInt(c.req.query('max') as string) : 1
+
   return c.render(
     <>
-      <$Counter />
-      {Array.from({ length: 1000 }, (_, i) => < $Counter initialCount={i} key={i} />)}
+      {Array.from({ length: max }, (_, i) => < $Counter initialCount={i} key={i} />)}
     </>
   )
 })
