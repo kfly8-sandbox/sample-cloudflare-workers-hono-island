@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { createIsland } from '@/lib/island'
+import { $island } from '@/islands/utils'
 
 type Props = {
   message: string
@@ -24,4 +24,4 @@ export function Hello({ message } : Props) {
   )
 }
 
-export default createIsland(Hello)
+export default $island(Hello)

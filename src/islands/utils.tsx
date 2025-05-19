@@ -1,15 +1,14 @@
-import React from 'react';
+import type { ComponentType, FC } from 'react';
 
 /**
  * Create an island component for server-side rendering.
  */
-export function createIsland<P extends object>(
-  Component: React.ComponentType<P>,
-  displayName?: string
-): React.FC<P> {
-  const componentName = displayName || Component.displayName || Component.name;
+export function $island<P extends object>(
+  Component: ComponentType<P>,
+): FC<P> {
+  const componentName = Component.displayName || Component.name;
 
-  const IslandComponent: React.FC<P> = (props) => {
+  const IslandComponent: FC<P> = (props) => {
     return (
       <div
         data-app-hydrated="false"

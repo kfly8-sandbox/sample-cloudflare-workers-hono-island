@@ -1,4 +1,4 @@
-import { createIsland } from '@/lib/island'
+import { $island } from '@/islands/utils'
 
 import { LoginForm } from '@/components/login-form'
 
@@ -11,4 +11,4 @@ export function MyLoginForm() {
   )
 }
 
-export default createIsland(MyLoginForm)
+export default $island(MyLoginForm)

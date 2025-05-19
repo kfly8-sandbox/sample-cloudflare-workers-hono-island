@@ -1,4 +1,4 @@
-import { createIsland } from '@/lib/island'
+import { $island } from '@/islands/utils'
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -85,5 +85,5 @@ export function MyForm() {
   )
 }
 
-export default createIsland(MyForm)
+export default $island(MyForm)
 

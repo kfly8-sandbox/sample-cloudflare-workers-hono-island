@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createIsland } from '@/lib/island'
+import { $island } from '@/islands/utils'
 
 import { Button } from '@/components/ui/button'
 
@@ -21,4 +21,4 @@ export function Counter({ initialCount = 0 } : Props ) {
   )
 }
 
-export default createIsland(Counter)
+export default $island(Counter)
