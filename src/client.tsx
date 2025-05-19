@@ -76,49 +76,53 @@ async function hydrateAllIslands() {
 
   console.log(`Visible islands: ${visible.length}, Hidden islands: ${hidden.length}`);
 
-  // 表示されているアイランドを優先的にハイドレーション
-  await Promise.all(
-    visible.map(async (island) => {
-      const componentName = island.getAttribute('data-app-component')!;
-      await hydrateIsland(island, componentName);
-      island.setAttribute('data-app-hydrated', 'true');
-    })
-  );
+  // バッチ処理用のヘルパー関数
+  const processBatchWithIdleCallback = (islands: Element[], priority: 'high' | 'low') => {
+    let index = 0;
+    const highPriority = priority === 'high';
+    const options = highPriority ? { timeout: 500 } : undefined; // 高優先度の場合はタイムアウト設定を短くする
 
-  // 表示されていないアイランドは遅延してハイドレーション
-  if (hidden.length > 0) {
-    // アイドル時間にハイドレーション処理を行う
-    const hydrateHidden = () => {
-      let index = 0;
+    const processNextBatch = (deadline: IdleDeadline) => {
+      // 一度に処理するバッチサイズ（高優先度の場合は多め、低優先度の場合は少なめ）
+      const batchSize = highPriority ? 3 : 1;
+      let processedInThisBatch = 0;
 
-      const processNextBatch = (deadline: IdleDeadline) => {
-        // アイドル時間がある限り、バッチ処理を続ける
-        while (index < hidden.length && deadline.timeRemaining() > 0) {
-          const island = hidden[index];
-          const componentName = island.getAttribute('data-app-component')!;
+      // アイドル時間がある限り、指定のバッチサイズまたはアイドル時間が尽きるまで処理する
+      while (index < islands.length &&
+            (highPriority || deadline.timeRemaining() > 0) &&
+            processedInThisBatch < batchSize) {
+        const island = islands[index];
+        const componentName = island.getAttribute('data-app-component')!;
 
-          // 非同期処理のため、即座に次のアイランドに移る
-          hydrateIsland(island, componentName).then(() => {
-            island.setAttribute('data-app-hydrated', 'true');
-          });
+        // 非同期処理のため、即座に次のアイランドに移る
+        hydrateIsland(island, componentName).then(() => {
+          island.setAttribute('data-app-hydrated', 'true');
+        });
 
-          index++;
-        }
+        index++;
+        processedInThisBatch++;
+      }
 
-        // まだ処理すべきアイランドが残っている場合は、次のアイドル時間に処理を予約
-        if (index < hidden.length) {
-          requestIdleCallback(processNextBatch);
-        } else {
-          console.log(`Completed hydration of all ${islandsToHydrate.length} islands`);
-        }
-      };
-
-      // アイドル時間に処理を開始
-      requestIdleCallback(processNextBatch);
+      // まだ処理すべきアイランドが残っている場合は、次のアイドル時間に処理を予約
+      if (index < islands.length) {
+        requestIdleCallback(processNextBatch, options);
+      } else {
+        console.log(`Completed hydration of all ${islands.length} ${priority} priority islands`);
+      }
     };
 
-    // 優先度の低いアイランドのハイドレーションを開始
-    hydrateHidden();
+    // アイドル時間に処理を開始
+    requestIdleCallback(processNextBatch, options);
+  };
+
+  // 表示されているアイランドを高優先度でバッチ処理
+  if (visible.length > 0) {
+    processBatchWithIdleCallback(visible, 'high');
+  }
+
+  // 表示されていないアイランドを低優先度でバッチ処理
+  if (hidden.length > 0) {
+    processBatchWithIdleCallback(hidden, 'low');
   }
 
   console.log(`Immediately hydrated ${visible.length} visible islands, queued ${hidden.length} hidden islands for later hydration`);
@@ -126,8 +130,6 @@ async function hydrateAllIslands() {
 
 async function hydrateIsland(element: Element, componentName: string) {
   try {
-    console.log(`Attempting to hydrate ${componentName} island`)
-
     const modulePath = `${ISLAND_DIRECTORY}/${componentName}.tsx`
     const importedModule = await COMPONENT_MODULES[modulePath]() as ComponentModule
 
@@ -148,7 +150,6 @@ async function hydrateIsland(element: Element, componentName: string) {
     }
 
     hydrateRoot(element, createElement(Component, props))
-    console.log(`Successfully hydrated ${componentName} island with component:`, Component.name || 'anonymous')
   } catch (error) {
     console.error(`Failed to hydrate ${componentName} island:`, error)
   }
